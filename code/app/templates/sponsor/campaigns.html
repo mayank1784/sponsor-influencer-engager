@@ -1,0 +1,234 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}
+  {{ title }}
+{% endblock %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+  <style>
+    h1{
+      text-align: center;
+    }
+    .floating-icon {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        z-index: 1000;
+        transform: translateX(-50%);
+        height: 50px;
+        width: 50px;
+        border-radius: 50%;
+        background-color: #007bff;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+        border: none;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        font-size: 2rem;
+        cursor: pointer;
+    }
+
+    .card-footer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .card {
+        border-radius: 10px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="container mt-5">
+    <!-- Search and Filter Form -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <form id="searchForm" class="form-inline">
+                <input type="text" id="searchName" class="form-control mb-2 mr-sm-2" placeholder="Search by Name">
+                <input type="number" id="searchBudget" class="form-control mb-2 mr-sm-2" placeholder="Search by Max Budget">
+                <label for='searchStartDate' class='p-2'>Start Date:</label>
+                <input type="date" id="searchStartDate" class="form-control mb-2 mr-sm-2">
+                <label for='searchEndDate' class='p-2'>End Date:</label>
+                <input type="date" id="searchEndDate" class="form-control mb-2 mr-sm-2">
+                <button type="button" class="btn btn-primary mb-2 mr-2" onclick="filterCampaigns()">Search</button>
+                <button type="button" class="btn btn-secondary mb-2" onclick='resetFilters()'>Reset</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Add Campaign Button -->
+    <button type="button" class="floating-icon" data-toggle="modal" data-target="#formModal">+</button>
+
+    <!-- Create Campaign Modal -->
+    <div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="formModalLabel">Create Campaign</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ url_for('create_campaign') }}" method="post">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" class="form-control" id="name" placeholder="Enter campaign name" name='name' required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea rows='4' class="form-control" id="description" placeholder="Description of campaign" name='description' required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="niche">Niche</label>
+                            <input type="text" class="form-control" id="niche" placeholder="Enter niche" name='niche' required>
+                        </div>
+                        <div class="form-group">
+                            <label for="start_date">Start Date</label>
+                            <input type='date' class="form-control" id="start_date" name='start_date' required>
+                        </div>
+                        <div class="form-group">
+                            <label for="end_date">End Date</label>
+                            <input type='date' class="form-control" id="end_date" name='end_date' required>
+                        </div>
+                        <div class="form-group">
+                            <label for="budget">Budget</label>
+                            <input type='number' class="form-control" id="budget" name='budget' required>
+                        </div>
+                        <div class="form-group">
+                            <label for="visibility">Visibility</label>
+                            <select class="form-control" id="visibility" name="visibility" required>
+                                <option value="">Select visibility</option>
+                                <option value="Private">Private</option>
+                                <option value="Public">Public</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="goals">Goals</label>
+                            <textarea rows='2' class="form-control" id="goals" placeholder="Goals of the campaign" name='goals' required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaigns List -->
+    <div class="container">
+        <div class="row" id="campaignsContainer">
+            {% for campaign in campaigns %}
+            <div class="col-lg-4 mb-3 campaign-card" data-name="{{ campaign.name }}" data-budget="{{ campaign.budget }}" data-start-date="{{ campaign.start_date }}" data-end-date="{{ campaign.end_date }}">
+                <div class="card h-100 bg-light border border-secondary">
+                    <div class="card-body">
+                        <div class='d-flex justify-content-between align-items-center text-center'>
+                            <h5 class="card-title text-uppercase">{{ campaign.name }}</h5>
+                            <form action="{{ url_for('getCampaign', campaign_id=campaign.id) }}" method="get">
+                                <button class='btn btn-info' type='submit'>Details</button>
+                            </form>
+                        </div>
+                        <p class="card-text">{{ campaign.description }}</p>
+                        <p class="card-text"><span class='font-weight-bold'>Niche: </span> {{ campaign.niche }}</p>
+                        <p class="card-text"><span class='font-weight-bold'>Start Date:</span> {{ campaign.start_date }}</p>
+                        <p class="card-text"><span class='font-weight-bold'>End Date:</span> {{ campaign.end_date }}</p>
+                        <p class="card-text"><span class='font-weight-bold'>Goals:</span> {{ campaign.goals }}</p>
+                        <p class="card-text"><span class='font-weight-bold'>Budget:</span> ${{ campaign.budget }}</span></p>
+                        <div class='d-flex justify-content-between align-items-center'>
+                           
+                            {% if campaign.status != "CampaignStatus.COMPLETED" %}
+                            <button type="button" class="btn btn-primary" onclick="location.href='{{ url_for('editCampaign', campaign_id=campaign.id) }}'">Edit</button>
+                            <form action="{{ url_for('delete_campaign', campaign_id=campaign.id) }}" method="post">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                            {% endif %}
+                            
+                        </div>
+                    </div>
+                    {% if campaign.status == "CampaignStatus.COMPLETED" %}
+                    <div class="card-footer badge bg-success mt-md-3">
+                        <span>Completed</span>
+                    </div>
+                    {% else %}
+                    {% if campaign.visibility == "Visibility.PRIVATE" %}
+                    <div class="card-footer badge bg-info mt-md-3">
+                        <span>PRIVATE</span>
+                    </div>
+                    {% else %}
+                    <div class="card-footer badge bg-warning mt-md-3">
+                        <span>PUBLIC</span>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+  <script>
+    function filterCampaigns() {
+      const name = document.getElementById('searchName').value.toLowerCase();
+      const budget = document.getElementById('searchBudget').value;
+      const startDate = document.getElementById('searchStartDate').value;
+      const endDate = document.getElementById('searchEndDate').value;
+      const cards = document.querySelectorAll('.campaign-card');
+
+      cards.forEach(card => {
+        const cardName = card.getAttribute('data-name').toLowerCase();
+        const cardBudget = card.getAttribute('data-budget');
+        const cardStartDate = card.getAttribute('data-start-date');
+        const cardEndDate = card.getAttribute('data-end-date');
+
+        let isVisible = true;
+
+        if (name && !cardName.includes(name)) {
+          isVisible = false;
+        }
+
+        if (budget && parseFloat(cardBudget) > parseFloat(budget)) {
+          isVisible = false;
+        }
+
+        if (startDate && new Date(cardStartDate) < new Date(startDate)) {
+          isVisible = false;
+        }
+
+        if (endDate && new Date(cardEndDate) > new Date(endDate)) {
+          isVisible = false;
+        }
+
+        if (isVisible) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function resetFilters() {
+      // Clear input values
+      document.getElementById('searchName').value = '';
+      document.getElementById('searchBudget').value = '';
+      document.getElementById('searchStartDate').value = '';
+      document.getElementById('searchEndDate').value = '';
+
+      // Show all campaign cards
+      const cards = document.querySelectorAll('.campaign-card');
+      cards.forEach(card => {
+        card.style.display = 'block';
+      });
+    }
+  </script>
+{% endblock %}

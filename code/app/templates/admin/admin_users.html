@@ -1,0 +1,204 @@
+{% extends "partials/base.html" %} {% block title %}Admin | User Management{% endblock %}
+{% block content %}
+<style>
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, .5);
+    box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+  }
+</style>
+<div class="container">
+  <h1 class="my-4">User Management</h1>
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h2>Sponsors</h2>
+      <form method="get" action="{{ url_for('admin_users') }}">
+        <div class="form-group">
+          <label for="sponsor_username">Username</label>
+          <input
+            type="text"
+            class="form-control"
+            id="sponsor_username"
+            name="sponsor_username"
+            placeholder="Username"
+          />
+        </div>
+        <div class="form-group">
+          <label for="sponsor_budget">Budget</label>
+          <input
+            type="number"
+            class="form-control"
+            id="sponsor_budget"
+            name="sponsor_budget"
+            placeholder="Budget"
+          />
+        </div>
+        <div class="form-group">
+          <label for="sponsor_industry">Industry</label>
+          <input
+            type="text"
+            class="form-control"
+            id="sponsor_industry"
+            name="sponsor_industry"
+            placeholder="Industry"
+          />
+        </div>
+        <div class="form-group">
+          <label for="sponsor_campaigns">No of Campaigns</label>
+          <input
+            type="number"
+            class="form-control"
+            id="sponsor_campaigns"
+            name="sponsor_campaigns"
+            placeholder="No of Campaigns"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">Filter Sponsors</button>
+      </form>
+      <div class="mt-4">
+        <div class="card shadow">
+          <div class="card-header bg-primary text-white">
+            <h4 class="mb-0 text-center">Filtered Sponsors</h4>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                  <tr>
+                    <th scope="col">Username</th>
+                    <th scope="col">Budget</th>
+                    <th scope="col">Industry</th>
+                    <th scope="col">Campaigns Count</th>
+                    <th scope='col'>Profile</th>
+                    <th scope='col'>Flagging</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for sponsor in sponsors %}
+                  <tr>
+                    <td>{{ sponsor.user.username }}</td>
+                    <td>${{ sponsor.budget }}</td>
+                    <td>{{ sponsor.industry }}</td>
+                    <td>{{ sponsor.campaigns_count }}</td>
+                    <td><a class="btn btn-info" href="{{ url_for('sponsor_dashboard', user_id=sponsor.user_id) }}">Go</a></td>
+                    <td>
+                        <form action="{{ url_for('flag_user') }}" method="post">
+                            <input type="hidden" name="user_id" value="{{ sponsor.user.id }}">
+                            {% if not sponsor.user.flagged %}
+                            <button type="submit" class="btn btn-danger">Flag</button>
+                            {% else %}
+                            <button type="submit" class="btn btn-success">Unflag</button>
+                            {% endif %}
+                          </form>
+                   </td>  
+                </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+    </div>
+    </div>
+    <div class="col-md-6">
+      <h2>Influencers</h2>
+      <form method="get" action="{{ url_for('admin_users') }}">
+        <div class="form-group">
+          <label for="influencer_category">Category</label>
+          <input
+            type="text"
+            class="form-control"
+            id="influencer_category"
+            name="influencer_category"
+            placeholder="Category"
+          />
+        </div>
+        <div class="form-group">
+          <label for="influencer_followers">Followers</label>
+          <input
+            type="number"
+            class="form-control"
+            id="influencer_followers"
+            name="influencer_followers"
+            placeholder="Followers"
+          />
+        </div>
+        <div class="form-group">
+          <label for="influencer_niche">Niche</label>
+          <input
+            type="text"
+            class="form-control"
+            id="influencer_niche"
+            name="influencer_niche"
+            placeholder="Niche"
+          />
+        </div>
+        <div class="form-group">
+          <label for="influencer_ad_requests"
+            >No of Ad Requests Completed</label
+          >
+          <input
+            type="number"
+            class="form-control"
+            id="influencer_ad_requests"
+            name="influencer_ad_requests"
+            placeholder="No of Ad Requests Completed"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          Filter Influencers
+        </button>
+      </form>
+      <div class="mt-4">
+        <div class="card shadow">
+          <div class="card-header bg-primary text-white">
+            <h4 class="mb-0 text-center">Filtered Influencers</h4>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                  <tr>
+                    <th scope="col">Username</th>
+                    <th scope="col">Followers</th>
+                    <th scope="col">Niche</th>
+                    <th scope="col">Ad Requests Count</th>
+                    <th scope='col'>Profile</th>
+                    <th scope='col'>Flagging</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for influencer in influencers %}
+                  <tr>
+                    <td>{{ influencer.user.username }}</td>
+                    <td>{{ influencer.followers }}</td>
+                    <td>{{ influencer.niche }}</td>
+                    <td>{{ influencer.ad_requests_count }}</td>
+                    <td><a class="btn btn-info" href="{{ url_for('influencer_dashboard', user_id=influencer.user_id) }}">Go</a></td>
+                    <td>
+                        <form action="{{ url_for('flag_user') }}" method="post">
+                            <input type="hidden" name="user_id" value="{{ influencer.user.id }}">
+                            {% if not influencer.user.flagged %}
+                            <button type="submit" class="btn btn-danger">Flag</button>
+                            {% else %}
+                            <button type="submit" class="btn btn-success">Unflag</button>
+                            {% endif %}
+                          </form>
+                   </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+    </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

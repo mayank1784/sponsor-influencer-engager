@@ -1,0 +1,233 @@
+{% extends "partials/base.html" %} {% block title %}Register{% endblock %} {% block
+navbar %}{% endblock %} {% block content %}
+<style>
+  .register-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  .register-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  .form-group label {
+    font-weight: bold;
+  }
+  .btn-primary {
+    width: 100%;
+  }
+  .register-footer {
+    text-align: center;
+    margin-top: 1rem;
+  }
+</style>
+<div class="container-fluid mt-5 mb-5">
+  <div class="register-container">
+    <h1 class="register-header">Register</h1>
+    <form method="post" onsubmit="return validateForm()">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          class="form-control"
+          id="username"
+          name="username"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          name="email"
+          required
+        />
+        <small id="emailHelp" class="form-text text-muted"
+          >Please enter a valid email address.</small
+        >
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          name="password"
+          required
+        />
+        <small id="passwordHelp" class="form-text text-muted"
+          >Password must be at least 8 characters long and contain at least one
+          number and one uppercase letter.</small
+        >
+      </div>
+      <div class="form-group">
+        <label for="role">Role</label>
+        <select
+          class="form-control"
+          id="role"
+          name="role"
+          required
+          onchange="showRoleSpecificFields()"
+        >
+          <option value="">Select Role</option>
+          <option value="sponsor">Sponsor</option>
+          <option value="influencer">Influencer</option>
+        </select>
+      </div>
+      <div id="sponsor-fields" style="display: none">
+        <div class="form-group">
+          <label for="company_name">Company Name</label>
+          <input
+            type="text"
+            class="form-control"
+            id="company_name"
+            name="company_name"
+          />
+        </div>
+        <div class="form-group">
+          <label for="industry">Industry</label>
+          <input
+            type="text"
+            class="form-control"
+            id="industry"
+            name="industry"
+          />
+        </div>
+        <div class="form-group">
+          <label for="budget">Budget</label>
+          <input type="number" class="form-control" id="budget" name="budget" />
+        </div>
+      </div>
+      <div id="influencer-fields" style="display: none">
+        <div class="form-group">
+          <label for="insta_profile_url">Instagram Profile URL</label>
+          <input
+            type="text"
+            class="form-control"
+            id="insta_profile_url"
+            name="insta_profile_url"
+          />
+        </div>
+        <div class="form-group">
+          <label for="category">Category</label>
+          <input
+            type="text"
+            class="form-control"
+            id="category"
+            name="category"
+          />
+        </div>
+        <div class="form-group">
+          <label for="niche">Niche</label>
+          <input type="text" class="form-control" id="niche" name="niche" />
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+    <div class="register-footer">
+      <p>Already registered? <a href="{{ url_for('login') }}">Sign in</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showRoleSpecificFields() {
+    var role = document.getElementById('role').value;
+    if (role === 'sponsor') {
+      document.getElementById('sponsor-fields').style.display = 'block';
+      document.getElementById('influencer-fields').style.display = 'none';
+      setRequired('sponsor-fields', true);
+      setRequired('influencer-fields', false);
+    } else if (role === 'influencer') {
+      document.getElementById('sponsor-fields').style.display = 'none';
+      document.getElementById('influencer-fields').style.display = 'block';
+      setRequired('sponsor-fields', false);
+      setRequired('influencer-fields', true);
+    } else {
+      document.getElementById('sponsor-fields').style.display = 'none';
+      document.getElementById('influencer-fields').style.display = 'none';
+      setRequired('sponsor-fields', false);
+      setRequired('influencer-fields', false);
+    }
+  }
+
+  function setRequired(sectionId, isRequired) {
+    var fields = document
+      .getElementById(sectionId)
+      .querySelectorAll('input, select');
+    fields.forEach((field) => {
+      if (isRequired) {
+        field.setAttribute('required', 'required');
+      } else {
+        field.removeAttribute('required');
+      }
+    });
+  }
+
+  function validateForm() {
+    var email = document.getElementById('email').value;
+    var password = document.getElementById('password').value;
+    var instaProfileUrl = document.getElementById('insta_profile_url').value;
+
+    // Email regex validation
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert('Please enter a valid email address.');
+      return false;
+    }
+
+    // Password regex validation (at least 8 characters, one number, one uppercase)
+    var passwordRegex =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      alert(
+        'Password must be at least 8 characters long and contain at least one number and one uppercase letter.',
+      );
+      return false;
+    }
+
+    // Instagram URL verification (optional)
+    if (instaProfileUrl.trim() !== '') {
+      var instaUrlRegex =
+        /^(http(s)?:\/\/)?(www\.)?instagram.com\/[a-zA-Z0-9._]{1,}$/;
+      if (!instaUrlRegex.test(instaProfileUrl)) {
+        alert('Please enter a valid Instagram Profile URL.');
+        return false;
+      }
+    }
+
+    // Convert all data to lowercase
+    document.getElementById('username').value = document
+      .getElementById('username')
+      .value.toLowerCase();
+    document.getElementById('email').value = email.toLowerCase();
+    document.getElementById('industry').value = document
+      .getElementById('industry')
+      .value.toLowerCase();
+    document.getElementById('company_name').value = document
+      .getElementById('company_name')
+      .value.toLowerCase();
+
+    document.getElementById('insta_profile_url').value =
+      instaProfileUrl.toLowerCase();
+    document.getElementById('category').value = document
+      .getElementById('category')
+      .value.toLowerCase();
+    document.getElementById('niche').value = document
+      .getElementById('niche')
+      .value.toLowerCase();
+
+    return true;
+  }
+
+  // Initialize the form fields based on the selected role when the page loads
+  document.addEventListener('DOMContentLoaded', function () {
+    showRoleSpecificFields();
+  });
+</script>
+{% endblock %}

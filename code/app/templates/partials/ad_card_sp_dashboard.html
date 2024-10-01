@@ -1,0 +1,71 @@
+<div class="card-body container">
+  <div class="row">
+    <div class="col-12 mb-3 border-bottom pb-2">
+      <h5 class="card-title">
+        <strong>Campaign #{{ ad_request.campaign.id }}:</strong>
+        {{ad_request.campaign.name}}
+      </h5>
+
+      <p class="card-text">
+        <strong>Description:</strong> {{ ad_request.campaign.description }}
+      </p>
+      <p class="card-text">
+        <strong>Goals:</strong> {{ ad_request.campaign.goals }}
+      </p>
+    </div>
+
+    <div class="col-sm-6">
+      <h5 class="card-title">Ad Request #{{ ad_request.id }}</h5>
+
+      <p class="card-text">
+        <strong>Messages:</strong> {{ ad_request.messages }}
+      </p>
+      <p class="card-text">
+        <strong>Influencer:</strong> {{ ad_request.influencer.user.username }}
+      </p>
+      <p class="card-text">
+        <strong>Niche:</strong> {{ ad_request.influencer.niche }}
+      </p>
+      <p class="card-text">
+        <strong>Insta:</strong>
+        <a href="{{ad_request.influencer.insta_profile_url}}" target="_blank"
+          >{{ ad_request.influencer.user.username }}</a
+        >
+      </p>
+    </div>
+
+    <div
+      class="col-sm-6 d-flex justify-content-center align-items-center flex-column p-0"
+    >
+      <h2>${{ad_request.payment_amount}}</h2>
+      <h6><strong>End Date:</strong> {{ad_request.campaign.end_date}}</h6>
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        {% if show_accept_button %}
+        <form
+          action="{{ url_for('acceptAdRequest', adRequestId=ad_request.id) }}"
+          method="post"
+          style="display: inline"
+        >
+          <button
+            type="submit"
+            class="btn btn-success btn-custom mr-1"
+            onclick="return confirm('Accept ad request for ${{ad_request.payment_amount}}?')"
+          >
+            Accept
+          </button>
+        </form>
+        {% endif %} {% if show_reject_button %}
+        <form
+          action="{{ url_for('rejectAdRequest', adRequestId=ad_request.id) }}"
+          method="post"
+          onsubmit="return confirm('Reject ad request of amount ${{ ad_request.payment_amount }}?');"
+        >
+          <button type="submit" class="btn btn-danger btn-custom">
+            Reject
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

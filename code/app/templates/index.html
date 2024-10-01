@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InfluenceHub - Connect with Top Influencers</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+  </head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #343a40;
+    }
+
+    .hero-section {
+      color: #fff;
+    }
+
+    .features-section img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .features-section h3 {
+      font-size: 1.25em;
+      margin-top: 1em;
+    }
+
+    .features-section p {
+      font-size: 0.9em;
+      color: #6c757d;
+    }
+  </style>
+
+  <body>
+    {% include 'header.html' %}
+
+    <section class="hero-section text-center py-5 bg-info">
+      <div class="container">
+        <h1 class="display-4">Connect with Top Influencers</h1>
+        <p class="lead">
+          Join InfluenceHub to create, manage, and track your influencer
+          marketing campaigns effortlessly.
+        </p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg mt-3"
+          >Get Started</a
+        >
+      </div>
+    </section>
+
+    <section class="features-section py-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-4 text-center">
+            <img
+              src="{{ url_for('static', filename='img/campaigns.svg') }}"
+              alt="Campaigns"
+              class="mb-3"
+              style="width: 100px"
+            />
+            <h3>Create Campaigns</h3>
+            <p>
+              Easily create and manage your marketing campaigns with top
+              influencers.
+            </p>
+          </div>
+          <div class="col-md-4 text-center">
+            <img
+              src="{{ url_for('static', filename='img/requests.svg') }}"
+              alt="Requests"
+              class="mb-3"
+              style="width: 100px"
+            />
+            <h3>Create Ad Requests</h3>
+            <p>
+              Post ad requests and let influencers bid to work on your projects.
+            </p>
+          </div>
+          <div class="col-md-4 text-center">
+            <img
+              src="{{ url_for('static', filename='img/payments.svg') }}"
+              alt="Payments"
+              class="mb-3"
+              style="width: 100px"
+            />
+            <h3>Get Paid</h3>
+            <p>
+              Influencers get paid quickly and securely through our platform.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="bg-light py-3">
+      <div class="container text-center">
+        <p>&copy; 2024 InfluenceHub. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+</html>

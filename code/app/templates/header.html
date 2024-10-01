@@ -1,0 +1,85 @@
+<style>
+  .navbar-brand {
+    font-weight: bold;
+    font-size: 1.5em;
+  }
+</style>
+<header class="bg-light py-3">
+  <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light">
+      <a class="navbar-brand" href="{{ url_for('index') }}">InfluenceHub</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          {% if session['user_id'] %}
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              href="{{ url_for(session['role'] + '_dashboard', user_id = session['user_id']) }}"
+              >Dashboard</a
+            >
+          </li>
+          {% if session['role'] == 'admin' %}
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              href="{{ url_for('admin_users') }}"
+              >Users</a
+            >
+          </li>
+          {% endif %}
+          
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+          </li>
+          {% endif %} {% if session['user_id'] %}
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              href="{{ url_for('profile', user_id=session['user_id']) }}"
+              >Profile</a
+            >
+          </li>
+          {% if session['role'] == 'sponsor' %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('campaigns') }}">Campaigns</a>
+          </li>
+          {% endif %} {% if session['role'] == 'influencer' %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('ad_requests') }}"
+              >Ad Requests</a
+            >
+          </li>
+          {% endif %}
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              href="{{ url_for('logout') }}"
+              onclick="return alert('Are you sure to logout ?')"
+              >Logout</a
+            >
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </nav>
+  </div>
+</header>

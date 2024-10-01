@@ -1,0 +1,82 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}
+  Edit Campaign
+{% endblock %}
+
+{% block content %}
+<style>
+  .edit-campaign-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.form-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.form-group label {
+    font-weight: bold;
+}
+.btn-submit {
+    width: 100%;
+    background-color: #007bff;
+    border: none;
+    color: #fff;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+}
+.btn-submit:hover {
+    background-color: #0056b3;
+}
+</style>
+
+<div class="container mt-5">
+  <div class='edit-campaign-container'>
+  <h1 class="form-header">Edit Campaign</h1>
+  
+      <form action="{{ url_for('editCampaign', campaign_id=campaign.id) }}" method="post">
+          <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" class="form-control" id="name" placeholder="Enter campaign name" name='name' required value="{{ campaign.name }}">
+          </div>
+          <div class="form-group">
+              <label for="description">Description</label>
+              <textarea rows='4' class="form-control" id="description" placeholder="Description of campaign" name='description' required>{{ campaign.description }}</textarea>
+          </div>
+          <div class="form-group">
+              <label for="start_date">Start Date</label>
+              <input type='date' class="form-control" id="start_date" name='start_date' required value="{{ campaign.start_date|strftime('%Y-%m-%d') }}">
+          </div>
+          <div class="form-group">
+              <label for="end_date">End Date</label>
+              <input type='date' class="form-control" id="end_date" name='end_date' required value="{{ campaign.end_date|strftime('%Y-%m-%d') }}">
+          </div>
+          <div class="form-group">
+              <label for="budget">Budget</label>
+              <input type='number' class="form-control" id="budget" name='budget' required value="{{ campaign.budget }}">
+          </div>
+          <div class="form-group">
+              <label for="visibility">Visibility</label>
+              <select class="form-control" id="visibility" name="visibility" required>
+                  <option value="">Select visibility</option>
+                  <option value="Private" {% if campaign.visibility.value == "Private" %}selected{% endif %}>Private</option>
+                  <option value="Public" {% if campaign.visibility.value == "Public" %}selected{% endif %}>Public</option>
+              </select>
+          </div>
+          <div class="form-group">
+              <label for="goals">Goals</label>
+              <textarea rows='2' class="form-control" id="goals" placeholder="Goals of the campaign" name='goals' required>{{ campaign.goals }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-submit">Submit</button>
+      </form>
+  </div>
+</div>
+
+{% endblock %}

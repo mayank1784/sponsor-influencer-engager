@@ -1,0 +1,54 @@
+/* styles.css */
+
+body {
+    overflow-x: hidden;
+  }
+  
+  #wrapper {
+    display: flex;
+    width: 100%;
+  }
+  
+  #sidebar-wrapper {
+    min-height: 100vh;
+    margin-left: -15rem;
+    transition: margin 0.25s ease-out;
+    width: 15rem;
+  }
+  
+  #wrapper.toggled #sidebar-wrapper {
+    margin-left: 0;
+  }
+  
+  #page-content-wrapper {
+    width: 100%;
+    position: absolute;
+  }
+  
+  .sidebar-heading {
+    padding: 0.875rem 1.25rem;
+    font-size: 1.2rem;
+  }
+  
+  .list-group-item {
+    border: none;
+    padding: 0.75rem 1.25rem;
+  }
+  
+  .list-group-item:hover {
+    background-color: #f8f9fa;
+  }
+  
+  #menu-toggle {
+    margin: 1rem;
+  }
+  
+  .bg-light {
+    background-color: #f8f9fa !important;
+  }
+  
+  .border-right {
+    border-right: 1px solid #dee2e6 !important;
+  }
+
+  

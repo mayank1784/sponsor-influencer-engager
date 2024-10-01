@@ -1,0 +1,51 @@
+{% extends "partials/base.html" %}
+{% block title %}Login{% endblock %}
+{% block navbar %}{% endblock %}
+{% block content %}
+<style>
+  .login-container {
+      max-width: 400px;
+      margin: auto;
+      padding: 2rem;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  .login-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+  }
+  .form-group label {
+      font-weight: bold;
+  }
+  .btn-primary {
+      width: 100%;
+  }
+  .login-footer {
+      text-align: center;
+      margin-top: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="container mt-5">
+<div class="login-container">
+  <h1 class="login-header">Login</h1>
+  <form method="post">
+      <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" class="form-control" id="username" name="username" required>
+      </div>
+      <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" class="form-control" id="password" name="password" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Login</button>
+  </form>
+  <div class="login-footer">
+      <p>Don't have an account? <a href="{{ url_for('register') }}">Sign up</a></p>
+  </div>
+</div>
+</div>
+{% endblock %}

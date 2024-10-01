@@ -1,0 +1,482 @@
+{% extends 'partials/base.html' %} {% block title %} Ad Requests {% endblock %} {% block
+content %}
+<style>
+  .card-custom {
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  .card-header-custom {
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-body-custom {
+    padding: 15px;
+  }
+  .btn-custom {
+    margin: 0 5px;
+    border-radius: 5px;
+  }
+  .accordion .card-header {
+    cursor: pointer;
+  }
+  .accordion .card-header:hover {
+    background-color: #f0f0f0;
+  }
+  .no-requests {
+    color: #6c757d;
+  }
+  .accordion-button {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    color: white;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    padding: 0;
+  }
+  .accordion-arrow {
+    transition: transform 0.2s;
+  }
+  .collapsed .accordion-arrow {
+    transform: rotate(90deg);
+  }
+  .scrollable-content {
+    max-height: 420px; /* Adjust the height as needed */
+    overflow-y: auto;
+  }
+</style>
+
+<div class="container">
+  <h1 class="mt-4">Your Ad Requests ({{influencer.user.username}})</h1>
+  <form id="sortingFilteringForm" method="get" action="{{ url_for('ad_requests') }}">
+    <div class="d-flex justify-content-between mb-3">
+      <select id="sortBy" name="sort_by" class="form-control btn-custom mr-2">
+        <option value="default" {% if request.args.get('sort_by') == 'default' %}selected{% endif %}>Sort By</option>
+        <option value="payment_amount" {% if request.args.get('sort_by') == 'payment_amount' %}selected{% endif %}>Payment Amount</option>
+        <option value="campaign_end_date" {% if request.args.get('sort_by') == 'campaign_end_date' %}selected{% endif %}>Campaign End Date</option>
+      </select>
+      <input type="text" id="filterBy" name="filter_by" class="form-control btn-custom" placeholder="Filter by Campaign" value="{{ request.args.get('filter_by', '') }}">
+      <button type="submit" class="btn btn-primary btn-custom ml-2">Apply</button>
+    </div>
+  </form>
+  <!-- Section to show categorized ad requests -->
+  <div class="accordion" id="adRequestsAccordion">
+    <!-- Pending Ad Requests -->
+    <div class="card">
+      <div class="card-header card-header-custom bg-info" id="headingPending">
+        <button
+          class="btn btn-link text-white accordion-button mb-0 collapsed"
+          type="button"
+          data-toggle="collapse"
+          data-target="#collapsePending"
+          aria-expanded="true"
+          aria-controls="collapsePending"
+        >
+          <span>Pending Ad Requests</span>
+          <i class="fas fa-chevron-right accordion-arrow"></i>
+        </button>
+      </div>
+      
+  
+      <div
+        id="collapsePending"
+        class="collapse show"
+        aria-labelledby="headingPending"
+        data-parent="#adRequestsAccordion"
+      >
+        <div class="card-body card-body-custom scrollable-content">
+          {% for ad_request in ad_requests if ad_request.status.value ==
+          "Pending" %}
+          <div class="card card-custom mb-3 shadow-sm">
+            {% set show_accept_button = (ad_request.payment_amount > 0) %}
+      {% set show_reject_button = (ad_request.payment_amount > 0) %}
+      {% set show_negotiate = (ad_request.payment_amount > 0) %}
+
+            {% with ad_request=ad_request, show_accept_button=show_accept_button, show_reject_button=show_reject_button, show_negotiate=show_negotiate %}
+            {% include "partials/ad_request_card.html" %}
+            {% endwith %}
+          </div>
+          {% else %}
+          <p class="no-requests">No pending ad requests found.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <!-- Negotiating Ad Requests -->
+    <div class="card">
+      <div
+        class="card-header card-header-custom bg-warning"
+        id="headingNegotiating"
+      >
+        <button
+          class="btn btn-link text-white accordion-button collapsed"
+          type="button"
+          data-toggle="collapse"
+          data-target="#collapseNegotiating"
+          aria-expanded="false"
+          aria-controls="collapseNegotiating"
+        >
+          <span>Negotiating Ad Requests</span>
+          <i class="fas fa-chevron-right accordion-arrow"></i>
+        </button>
+      </div>
+      <div
+        id="collapseNegotiating"
+        class="collapse"
+        aria-labelledby="headingNegotiating"
+        data-parent="#adRequestsAccordion"
+      >
+        <div class="card-body card-body-custom scrollable-content">
+          {% for ad_request in ad_requests if ad_request.status.value ==
+          "Negotiating" %}
+          <div class="card card-custom mb-3 shadow-sm">
+            {% with ad_request=ad_request, show_accept_button=False, show_reject_button=True, show_negotiate=False %}
+             {% include "partials/ad_request_card.html" %}
+             {% endwith %}
+          </div>
+          {% else %}
+          <p class="no-requests">No negotiating ad requests found.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Accepted Ad Requests -->
+    <div class="card">
+      <div
+        class="card-header card-header-custom bg-success"
+        id="headingAccepted"
+      >
+        <button
+          class="btn btn-link text-white accordion-button mb-0 collapsed"
+          type="button"
+          data-toggle="collapse"
+          data-target="#collapseAccepted"
+          aria-expanded="false"
+          aria-controls="collapseAccepted"
+        >
+          <span>Accepted Ad Requests</span>
+          <i class="fas fa-chevron-right accordion-arrow"></i>
+        </button>
+      </div>
+      <div
+        id="collapseAccepted"
+        class="collapse"
+        aria-labelledby="headingAccepted"
+        data-parent="#adRequestsAccordion"
+      >
+        <div class="card-body card-body-custom scrollable-content">
+          {% for ad_request in ad_requests if ad_request.status.value ==
+          "Accepted" %}
+          <div class="card card-custom mb-3 shadow-sm">
+            {% with ad_request=ad_request, show_accept_button=False, show_reject_button=False, show_negotiate=False %}
+            {% include "partials/ad_request_card.html" %}
+            {% endwith %}
+          </div>
+          {% else %}
+          <p class="no-requests">No accepted ad requests found.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <!-- Completed Ad Requests -->
+    <div class="card">
+      <div
+        class="card-header card-header-custom bg-primary"
+        id="headingCompleted"
+      >
+        <button
+          class="btn btn-link text-white accordion-button mb-0 collapsed"
+          type="button"
+          data-toggle="collapse"
+          data-target="#collapseCompleted"
+          aria-expanded="false"
+          aria-controls="collapseCompleted"
+        >
+          <span>Completed Ad Requests</span>
+          <i class="fas fa-chevron-right accordion-arrow"></i>
+        </button>
+      </div>
+      <div
+        id="collapseCompleted"
+        class="collapse"
+        aria-labelledby="headingCompleted"
+        data-parent="#adRequestsAccordion"
+      >
+        <div class="card-body card-body-custom scrollable-content">
+          {% for ad_request in ad_requests if ad_request.status.value ==
+          "Completed" %}
+          <div class="card card-custom mb-3 shadow-sm text-bg-dark">
+            {% with ad_request=ad_request, show_accept_button=False, show_reject_button=False, show_negotiate=False %}
+            {% include "partials/ad_request_card.html" %}
+            {% endwith %}
+          </div>
+          {% else %}
+          <p class="no-requests">No Completed ad requests found.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Rejected Ad Requests -->
+    <div class="card">
+      <div
+        class="card-header card-header-custom bg-danger"
+        id="headingRejected"
+      >
+        <button
+          class="btn btn-link text-white accordion-button mb-0 collapsed"
+          type="button"
+          data-toggle="collapse"
+          data-target="#collapseRejected"
+          aria-expanded="false"
+          aria-controls="collapseRejected"
+        >
+          <span>Rejected Ad Requests</span>
+          <i class="fas fa-chevron-right accordion-arrow"></i>
+        </button>
+      </div>
+      <div
+        id="collapseRejected"
+        class="collapse"
+        aria-labelledby="headingRejected"
+        data-parent="#adRequestsAccordion"
+      >
+        <div class="card-body card-body-custom scrollable-content">
+          {% for ad_request in ad_requests if ad_request.status.value ==
+          "Rejected" %}
+          <div class="card card-custom mb-3 shadow-sm">
+            {% with ad_request=ad_request, show_accept_button=False, show_reject_button=False, show_negotiate=False %}
+            {% include "partials/ad_request_card.html" %}
+            {% endwith %}
+          </div>
+          {% else %}
+          <p class="no-requests">No rejected ad requests found.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--Public campaigns list-->
+  <h1 class="mt-4" id='#publicCampaigns'>Public Campaigns</h1>
+  <div class="card">
+    <div class="card-header card-header-custom bg-dark" id="headingPending">
+      <span>Campaigns you can send ad requests<span>
+    </div>
+    <div class="card-body card-body-custom">
+      {% if campaigns %}
+      {% for campaign in campaigns %}
+      <div class="card card-custom mb-3 shadow-sm">
+        <div class="card-body container">
+          <div class="row">
+            <div class="col-sm-4">
+              <h5 class="card-title">Campaign #{{ campaign.id }} {{campaign.name}}
+                <div
+                class="badge text-wrap bg-warning"
+                style="width: 6rem"
+              >
+                {{campaign.visibility.value}}
+              </div>
+              </h5>
+              <p class="card-text">
+                <strong>Description:</strong> {{ campaign.description }}
+              </p>
+              <p class="card-text">
+                <strong>Niche:</strong> {{ campaign.niche }}
+              </p>
+            </div>
+            <div class="col-sm-4">
+              <h5 class="card-title">
+                Duration
+              </h5>
+              <p class="card-text">
+                <strong>Start Date:</strong> {{ campaign.start_date }}
+              </p>
+              <p class="card-text">
+                <strong>End Date:</strong> {{ campaign.end_date }}
+              </p>
+            </div>
+            <div
+              class="col-sm-4 d-flex justify-content-center align-items-center flex-column"
+            >
+              
+                
+                <a
+                  href="#"
+                  class="btn btn-info btn-custom"
+                  onclick="openAdRequestModal({{campaign.id}})"
+                  >Send Ad Request</a
+                >
+              
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p>Hang Tight. Check Back Later!</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Edit Ad Request Modal -->
+<div class="modal fade" id="editAdRequestModal" tabindex="-1" aria-labelledby="editAdRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAdRequestModalLabel">Edit Payment Terms</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ url_for('update_payment_terms') }}" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="ad_request_id" id="modalAdRequestId">
+                    <div class="form-group">
+                        <label for="newPaymentAmount">New Payment Amount</label>
+                        <input type="number" class="form-control" id="newPaymentAmount" name="new_payment_amount" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Create Ad Request Modal -->
+<div
+  class="modal fade"
+  id="adRequestModal"
+  tabindex="-1"
+  aria-labelledby="adRequestModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content modal-custom">
+      <div class="modal-header">
+        <h5 class="modal-title" id="adRequestModalLabel">Send Ad Request</h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="adRequestForm">
+          <input type="hidden" id="campaignId" />
+          <input type="hidden" id="influencerId" />
+          <div class="mb-3">
+            <label for="messages" class="form-label">Messages</label>
+            <input type="text" class="form-control" id="messages" required />
+          </div>
+          
+          <div class="mb-3">
+            <label for="paymentAmount" class="form-label">Payment Amount</label>
+            <input
+              type="number"
+              class="form-control"
+              id="paymentAmount"
+              required
+              disabled
+              placeholder='$0.00'
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary btn-custom btn-primary-custom"
+          >
+            Submit
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+
+function openEditAdRequestModal(adRequestId, paymentAmount) {
+  $('#modalAdRequestId').val(adRequestId);
+  $('#newPaymentAmount').val(paymentAmount);
+  $('#editAdRequestModal').modal('show');
+}
+
+function openAdRequestModal(campaignId) {
+  document.getElementById('campaignId').value = campaignId;
+  $('#adRequestModal').modal('show');
+}
+
+document
+  .getElementById('adRequestForm')
+  .addEventListener('submit', function (event) {
+    event.preventDefault();
+    createAdRequest();
+  });
+
+function createAdRequest(){
+  const campaignId = document.getElementById('campaignId').value;
+  const messages = document.getElementById('messages').value;
+  const influencerId = {{influencer.id}}
+  const requirements = 'NA'
+  const paymentAmount = 0
+
+  const requestData = {
+    campaign_id: campaignId,
+    influencer_id: influencerId,
+    messages: messages,
+    requirements: requirements,
+    payment_amount: parseFloat(paymentAmount),
+  };
+
+  fetch('http://127.0.0.1:5000/api/ad_requests', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestData),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        console.log(response.json());
+        return response.json().then((errorData) => {
+          // Check for specific error message
+          alert('An error occurred: ' + errorData.message);
+
+          throw new Error(
+            'Network response was not ok ' + response.statusText,
+          );
+        });
+      }
+      return response.json();
+    })
+    .then((data) => {
+      $('#adRequestModal').modal('hide');
+      alert('Ad Request Sent Successfully');
+      // Optionally, you could update the ad requests list here.
+      // For simplicity, we can just reload the page to see the new request in the list.
+      location.reload();
+    })
+    .catch((error) => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
+
+}
+</script>
+{% endblock %}

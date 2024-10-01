@@ -1,0 +1,467 @@
+{% extends "partials/base.html" %}
+{% block title %}
+{% if admin %}Sponsor
+{% else %}
+Sponsor Dashboard
+{% endif %}
+{% endblock %}
+
+ {% block content %}
+<style>
+  .progress {
+    height: 30px;
+  }
+  .progress-bar {
+    font-size: 16px;
+    line-height: 30px;
+    color: #fff;
+    text-align: center;
+  }
+  .card-custom {
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  .card-header-custom {
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #publicAdRequests{
+    max-height: 400px; 
+    min-height: 300px; 
+    overflow-y: scroll;
+  
+  }
+  #CampaignProgress{
+    max-height: 400px; 
+    min-height: 300px; 
+    overflow-y: scroll;
+  }
+  #insta{
+    cursor: pointer;
+  }
+  ::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, .5);
+    box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+  }
+</style>
+<div class='container'>
+
+  {% if admin %}
+  <h4>{{sponsor.user.username}}'s Profile</h4>
+  {%else%}
+<h4>Welcome, {{sponsor.user.username}}!</h4>
+{% endif %}
+ <!-- Sponsor Profile Information -->
+ {% if admin %}
+ <div class="card mb-5">
+   <div class="card-body">
+     <p><strong>Username:</strong> {{ sponsor.user.username }}</p>
+     <p><strong>Company:</strong> {{ sponsor.company_name }}</p>
+     <p><strong>Industry:</strong> {{ sponsor.industry }}</p>
+     <p><strong>Budget:</strong> {{ sponsor.budget | round(2) }}</p>
+     {% if sponsor.user.flagged %}
+     <p class='btn btn-danger'>Flagged</p>
+     {% else %}
+     <p class='btn btn-success'>Active</p>
+     {% endif %}
+   </div>
+ </div>
+ {% endif %}
+<!-- Ad Requests by Status Chart -->
+<div class="row mb-5">
+  <div class="col-md-4">
+    <h4 class='text-center'>Campaigns</h4>
+    <div class="chart-container d-flex justify-content-center" style="position: relative; height:250px; width:100%">
+        <canvas id="campaignStatusChart"></canvas>
+    </div>
+</div>
+  <div class="col-md-4">
+      <h4 class='text-center'>Ad Requests by Status</h4>
+      <div class="chart-container d-flex justify-content-center" style="position: relative; height:250px; width:100%">
+          <canvas id="adRequestsByStatusChart"></canvas>
+      </div>
+  </div>
+  <div class="col-md-4 d-flex align-items-center justify-content-center flex-column">
+    {% set paymentsToDate = namespace(completed=0|float, pending=0|float) %}
+    {% for campaign in campaigns %}
+    {% for ad in campaign.ad_requests %}
+      {% if ad.status.value == 'Completed' %}
+      {% set paymentsToDate.completed = paymentsToDate.completed + ad.payment_amount %}
+      {%else%}
+      {% if ad.status.value not in ['Rejected', 'Abandoned'] %}
+      {% set paymentsToDate.pending = paymentsToDate.pending + ad.payment_amount %}
+      {% endif %}
+      {% endif %}
+    
+    {%endfor%}
+    {% endfor %}
+    <h4 class='text-center'>Payments Status</h4>
+    {% set total_pay = paymentsToDate.completed + paymentsToDate.pending %}
+    <p>Total Payments To Date: <strong class='text-danger'>${{ total_pay }}</strong></p>
+    <div class="chart-container d-flex justify-content-center" style="position: relative; height:250px; width:100%">
+      <canvas id="paymentsChart"></canvas>
+  </div>
+   
+  </div>
+</div>
+
+<!--Influencer Table-->
+<div class='mb-5 mt-5'>
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      {% if admin %}
+      <h4 class="mb-0 text-center">Top Contributing Influencers for {{sponsor.user.username}}</h4>
+      {%else%}
+      <h4 class="mb-0 text-center">Your Top Contributing Influencers</h4>
+      {% endif %}
+      
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col">Influencer Username</th>
+              <th scope="col">Ad Requests Served</th>
+              <th scope="col">Followers</th>
+              <th scope="col">Niche</th>
+              <th scope="col">Instagram</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for influencer_data in sponsors_influencers %}
+              <tr>
+                <td>{{ influencer_data.influencer.user.username }}</td>
+                <td>{{ influencer_data.ad_request_count }}</td>
+                <td>{{ influencer_data.influencer.followers }}</td>
+                <td>{{ influencer_data.influencer.niche }}</td>
+                <td>
+                  <a href="{{ influencer_data.influencer.insta_profile_url }}" target="_blank">
+                    <img id="insta" src="{{ url_for('static', filename='img/instagram.svg') }}" class="img-fluid" style="width: 30px;">
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class='row mb-5'>
+<div class="card col p-0 border border-dark mx-2" >
+  <div class="card-header card-header-custom bg-dark">
+    
+    <span>Public Ad Requests pending Accept<span>
+     
+  </div>
+ <!-- Sorting campaigns by end date descending -->
+{% set sorted_campaigns = campaigns|sort(attribute='end_date') %}
+<div class='card-body p-4' id="publicAdRequests">
+{% for campaign in sorted_campaigns %}
+{% if campaign.visibility.value == 'Public' %}
+{% for ad in campaign.ad_requests %}
+{% if ad.payment_amount <= 0 and ad.status.value=='Pending' %}
+<div class="card card-custom mb-3 shadow-sm">
+  {% if admin %}
+  {% with ad_request=ad, show_accept_button=False, show_reject_button=False, show_negotiate=False %}
+  {% include "partials/ad_card_sp_dashboard.html" %}
+  {% endwith %}
+  {% else %}
+  {% with ad_request=ad, show_accept_button=True, show_reject_button=True, show_negotiate=False %}
+  {% include "partials/ad_card_sp_dashboard.html" %}
+  {% endwith %}
+  {% endif %}
+  
+  
+  
+</div>
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+</div>
+</div>
+<div class='col card p-0 border border-dark max-h-10 mx-2' >
+  <div class="card-header card-header-custom bg-info" >
+    <span>Campaign Progress<span>
+  </div>
+  <div class='card-body' id="CampaignProgress">
+    {% set sorted_campaigns_progress = campaigns_progress|sort(attribute='end_date', reverse=True) %}
+  {% for campaign in sorted_campaigns_progress %}
+  
+  <div class="mb-4">
+    <div class='d-flex justify-content-between'>
+    <h6>{{ campaign.name }} (ID: {{ campaign.id }}) </h6>
+    <h6><strong>End at: </strong>{{campaign.end_date}}</h6>
+  </div>
+    <canvas id="progressChart-{{ campaign.id }}" data-progress="{{ campaign.progress }}" height='30'></canvas>
+  </div>
+  {% endfor %}
+</div>
+</div>
+
+</div>
+<!--Next row-->
+<div class='row mt-4 mb-5 card p-0 border border-dark mx-2'>
+  <div class="card-header card-header-custom bg-warning text-dark">
+    {% if admin %}
+    <span><strong>Campaigns with pending Ad Requests from {{sponsor.user.username}}'s end</strong><span>
+    {% else %}
+    <span><strong>Campaigns with pending Ad Requests from your end</strong><span>
+    {% endif %}
+   
+  </div>
+  <div class='card-body p-4' id="negotiatingRequestsCampaigns">
+
+    {% set negotiatingRequests = namespace(count=0|float) %}
+
+  {% for campaign in sorted_campaigns %}
+  {% set has_negotiating = namespace(value=False) %}
+  {% for ad in campaign.ad_requests %}
+        {% if ad.status.value == 'Negotiating' %}
+            {% set has_negotiating.value = True %}
+            {% set negotiatingRequests.count = negotiatingRequests.count + 1 %}
+        {% endif %}
+    {% endfor %}
+  {% if campaign.visibility.value=='Private' and has_negotiating.value %}
+  <!--ad card starts-->
+
+  <div class="card card-custom mb-3 shadow-sm">
+
+    
+    <div class="card-body container">
+      <div class="row">
+        <div class="col-sm">
+          <h5 class="card-title">
+            <strong>Campaign #{{campaign.id}}:</strong>
+            {{campaign.name}}
+          </h5>
+    
+          <p class="card-text">
+            <strong>Description:</strong> {{campaign.description}}
+          </p>
+          <p class="card-text">
+            <strong>Goals:</strong> {{campaign.goals}}
+          </p>
+          <p class="card-text">
+            <strong>End Date:</strong> {{campaign.end_date}}
+          </p>
+        </div>
+    
+        <div class="d-flex col-sm justify-content-center flex-column align-items-center">
+          <h5 class="card-title">Negotiating Requests: <strong class='text-danger'>{{negotiatingRequests.count}}</strong></h5>
+    
+          <p class="card-text">
+            Accept to proceed further.
+          </p>
+          <div
+          class="d-flex justify-content-center align-items-center flex-column p-0"
+        >
+        <form
+              action="{{ url_for('getCampaign', campaign_id=campaign.id) }}"
+              method="get"
+              style="display: inline"
+            >
+              <button
+                type="submit"
+                class="btn btn-success btn-custom mr-1"
+              >
+                Go To Campaign
+              </button>
+            </form>
+        </div>
+        </div>
+    
+       
+      </div>
+    </div>      
+
+    <!--ad card ends-->
+
+</div>
+
+  {% endif %}
+  {% endfor %}
+
+  
+
+</div>
+<!--row ends-->
+</div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('canvas[id^="progressChart-"]').forEach(canvas => {
+      const progress = canvas.dataset.progress;
+      const ctx = canvas.getContext('2d');
+      
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Progress'],
+          datasets: [{
+            label: 'Progress',
+            data: [progress],
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+            barThickness: 10,
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          scales: {
+            x: {
+              beginAtZero: true,
+              max: 100,
+              grid: {
+                display: false
+              },
+              
+            },
+            y: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                display: false
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.raw + '%';
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+  
+
+  // Data for the Ad Requests by Status Chart
+  const colors = ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#000'];
+  const adRequestsByStatusData = {
+    labels: [{% for key in ad_status_data.keys() %}'{{ key }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+    datasets: [{
+        data: [{% for value in ad_status_data.values() %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}], 
+        backgroundColor: colors.slice(0, {{ ad_status_data|length }}),
+        hoverBackgroundColor: colors.slice(0, {{ ad_status_data|length }})
+    }]
+};
+
+// Configuration for the Ad Requests by Status Chart
+const adRequestsByStatusConfig = {
+    type: 'pie',
+    data: adRequestsByStatusData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(tooltipItem) {
+                        return tooltipItem.label + ': ' + tooltipItem.raw;
+                    }
+                }
+            }
+        }
+    },
+};
+
+// Render the Ad Requests by Status Chart
+const ctx2 = document.getElementById('adRequestsByStatusChart').getContext('2d');
+new Chart(ctx2,
+    adRequestsByStatusConfig
+);
+
+// Campaign pie chart
+
+
+
+const ctx3 = document.getElementById('campaignStatusChart').getContext('2d');
+  new Chart(ctx3, {
+    type: 'pie',
+    data: {
+      labels: [{% for key in campaign_status.keys() %}'{{ key }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+      datasets: [{
+        data: [{% for value in campaign_status.values() %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}],
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': ' + context.raw;
+            }
+          }
+        }
+      }
+    }
+  });
+
+
+  const ctx4 = document.getElementById('paymentsChart').getContext('2d');
+
+    new Chart(ctx4, {
+      type: 'doughnut',
+      data: {
+        labels: ['Pending Payments', 'Completed Payments'],
+        datasets: [{
+          data: [{{paymentsToDate.pending}}, {{paymentsToDate.completed}}],
+          backgroundColor: ['#FFCE56', '#4BC0C0'],
+          borderColor: ['#000', '#000'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const label = context.label || '';
+                const value = context.raw || 0;
+                return `${label}: $${value}`;
+              }
+            }
+          }
+        },
+        cutout: '70%', // This makes it a ring chart
+      }
+    });
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,764 @@
+{% extends 'partials/base.html' %} {% block title %} Campaign Details - {{ campaign.name
+}} {% endblock %} {% block content %}
+<style>
+  .full-height {
+    height: 65vh;
+    overflow: hidden;
+  }
+
+  .scrollable-content {
+    overflow-y: auto;
+    height: calc(80vh - 60px);
+  }
+
+  .ad-requests-container {
+    height: calc(100vh - 80vh);
+    overflow-y: auto;
+  }
+
+  .scrollable-influencer {
+    max-height: calc(65vh - 32vh);
+    overflow-y: auto;
+  }
+
+  .adRequestList {
+    margin-top: 20px;
+  }
+
+  .card-custom {
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+
+  .card-custom .card-body {
+    padding: 1rem;
+  }
+
+  .card-title-custom {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+
+  .badge-custom {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .btn-custom {
+    border-radius: 5px;
+  }
+
+  .btn-primary-custom {
+    background-color: #007bff;
+    border: none;
+  }
+
+  .btn-primary-custom:hover {
+    background-color: #0056b3;
+  }
+
+  .modal-custom .modal-content {
+    border-radius: 10px;
+  }
+</style>
+
+<div class="container-fluid">
+  <div class="row full-height">
+    <!-- Left Column: Campaign Details -->
+    <div class="col-lg-4 p-4 bg-warning">
+      <div class="card card-custom mb-3">
+        <div class="card-body">
+          <h5 class="card-title card-title-custom">{{ campaign.name }}</h5>
+          <p class="card-text">{{ campaign.description }}</p>
+          <p class="card-text">
+            <strong>Start Date:</strong> {{ campaign.start_date }}
+          </p>
+          <p class="card-text">
+            <strong>End Date:</strong> {{ campaign.end_date }}
+          </p>
+          <p class="card-text"><strong>Goals:</strong> {{ campaign.goals }}</p>
+          <p class="card-text">
+            <strong>Budget:</strong> ${{ campaign.budget }}
+          </p>
+
+          <!-- Status Badge -->
+          {% if campaign.status.value == "Completed" %}
+          <span class="badge badge-info badge-custom">Completed</span>
+          {% else %}
+          <span class="badge badge-info badge-custom">Ongoing</span>
+          {% endif %}
+        </div>
+        <div class="card-footer">
+          {% if campaign.visibility.value == "Private" %}
+          <span class="badge badge-success badge-custom">PRIVATE</span>
+          {% else %}
+          <span class="badge badge-warning badge-custom">PUBLIC</span>
+          {% endif %} {% if campaign.status.value != "Completed" %}
+          <button
+            type="button"
+            data-id="{{ campaign.id }}"
+            onclick="markCampaignAsCompleted(this)"
+            class="btn btn-primary btn-custom btn-primary-custom"
+          >
+            Mark as completed
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Search Influencers -->
+    <div class="col-lg-8 p-4 m-0">
+      <div class="card card-custom mb-3 p-0">
+        <div class="card-body p-2">
+          <h5 class="card-title card-title-custom">Search Influencers</h5>
+          <form id="searchInfluencerForm" class="row g-3">
+            <!-- Add your search fields here with smaller input sizes -->
+            <div class="col-md-3">
+              <label for="influencerName" class="form-label">Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="influencerName"
+                placeholder="Name"
+              />
+            </div>
+            <div class="col-md-3">
+              <label for="influencerFollowers" class="form-label"
+                >Min Followers</label
+              >
+              <input
+                type="number"
+                class="form-control"
+                id="influencerFollowers"
+                placeholder="Count"
+              />
+            </div>
+            <div class="col-md-3">
+              <label for="influencerNiche" class="form-label">Niche</label>
+              <input
+                type="text"
+                class="form-control"
+                id="influencerNiche"
+                placeholder="Niche"
+              />
+            </div>
+            <div class="col d-flex align-self-end">
+              <button
+                type="button"
+                class="btn btn-primary btn-custom btn-primary-custom"
+                onclick="searchInfluencers()"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Influencer List -->
+      <div class="card card-custom">
+        <div class="card-header">Influencers</div>
+        <div class="card-body scrollable-influencer" id="influencerList">
+          <!-- Influencer search results will be displayed here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ad Requests List -->
+  <h2 class="text-center my-4">Ad Requests</h2>
+  <div class="row adRequestList">
+    {% for ad_request in campaign.ad_requests %}
+    <div class="col-lg-4 mb-3">
+      <div class="card h-100 bg-light border border-secondary card-custom">
+        <div class="card-body">
+          <div
+            class="d-flex justify-content-between align-items-center text-center"
+          >
+            <p>
+              <strong>Influencer:</strong> {{
+              ad_request.influencer.user.username }}
+            </p>
+            <button
+              class="btn {% if ad_request.status.value == 'Accepted' %} btn-success {% elif ad_request.status.value == 'Negotiating' %} btn-warning {% elif ad_request.status.value == 'Pending' %} btn-info {% elif ad_request.status.value == 'Rejected' %} btn-danger {% else %} btn-secondary {% endif %}"
+              type="button"
+            >
+              {{ ad_request.status.value }}
+            </button>
+          </div>
+          <p><strong>Messages:</strong> {{ ad_request.messages }}</p>
+          {% if ad_request.requirements %}
+          <p><strong>Requirements:</strong> {{ ad_request.requirements }}</p>
+          {% endif %}
+          <p>
+            <strong>Payment Amount:</strong> ${{ ad_request.payment_amount }}
+          </p>
+          <div
+            class="d-flex justify-content-between align-items-center text-center"
+          >
+            <div>
+              {% if ad_request.status.value != "Abandoned"%} {% if
+              campaign.visibility.value != 'Public'%} {% if
+              ad_request.status.value != 'Negotiating' %}
+              <button
+                class="btn btn-warning btn-custom"
+                onclick="openEditAdRequestModal({{ ad_request.id }}, '{{ ad_request.status.value }}')"
+              >
+                Edit
+              </button>
+              <button
+                class="btn btn-danger btn-custom"
+                onclick="deleteAdRequest({{ ad_request.id }}, '{{ ad_request.status.value }}')"
+              >
+                Delete
+              </button>
+              {% else %}{%if ad_request.status.value == 'Negotiating' %}
+
+              <form
+                action="{{ url_for('acceptAdRequest', adRequestId=ad_request.id) }}"
+                method="post"
+                onsubmit="return confirm('Accept Ad Request for negotiated amount of ${{ ad_request.payment_amount }}?');"
+              >
+                <button type="submit" class="btn btn-success btn-custom">
+                  Accept
+                </button>
+              </form>
+              {% endif %} {% endif %} {% else %}
+              <p class="p-1 bg-dark rounded">
+                <strong class="text-light"
+                  >Manage Public Ad Requests from Dashboard</strong
+                >
+              </p>
+              {% endif %}
+
+              <p>{% endif %}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Ad Request Modal -->
+<div
+  class="modal fade"
+  id="adRequestModal"
+  tabindex="-1"
+  aria-labelledby="adRequestModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content modal-custom">
+      <div class="modal-header">
+        <h5 class="modal-title" id="adRequestModalLabel">Send Ad Request</h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="adRequestForm">
+          <input type="hidden" id="campaignId" value="{{ campaign.id }}" />
+          <input type="hidden" id="influencerId" />
+          <div class="mb-3">
+            <label for="messages" class="form-label">Messages</label>
+            <input type="text" class="form-control" id="messages" required />
+          </div>
+          <div class="mb-3">
+            <label for="requirements" class="form-label">Requirements</label>
+            <input
+              type="text"
+              class="form-control"
+              id="requirements"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="paymentAmount" class="form-label">Payment Amount</label>
+            <input
+              type="number"
+              class="form-control"
+              id="paymentAmount"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary btn-custom btn-primary-custom"
+          >
+            Submit
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Ad Request Modal -->
+<div
+  class="modal fade"
+  id="editAdRequestModal"
+  tabindex="-1"
+  aria-labelledby="editAdRequestModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content modal-custom">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editAdRequestModalLabel">
+          Edit Ad Request
+        </h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editAdRequestForm">
+          <input type="hidden" id="editAdRequestId" />
+          <div class="mb-3">
+            <label for="editMessages" class="form-label">Messages</label>
+            <input
+              type="text"
+              class="form-control"
+              id="editMessages"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="editRequirements" class="form-label"
+              >Requirements</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="editRequirements"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="editPaymentAmount" class="form-label"
+              >Payment Amount</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="editPaymentAmount"
+              required
+            />
+          </div>
+          <div class="mb-3 position-relative">
+            <label for="editInfluencerSearch" class="form-label"
+              >Assign Influencer</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="editInfluencerSearch"
+              placeholder="Search for an influencer"
+              autocomplete="off"
+            />
+            <input type="hidden" id="editInfluencerId" />
+            <div id="editInfluencerList" class="dropdown-menu show"></div>
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary btn-custom btn-primary-custom"
+          >
+            Update
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function searchInfluencers() {
+    const nameElement = document.getElementById('influencerName');
+    const nicheElement = document.getElementById('influencerNiche');
+    const followersElement = document.getElementById('influencerFollowers');
+
+    const name = nameElement ? nameElement.value.trim() : null;
+    const niche = nicheElement ? nicheElement.value.trim() : null;
+    const followers = followersElement
+      ? parseInt(followersElement.value.trim())
+      : NaN;
+    // Validate at least one field is provided
+    if (!name && !niche && isNaN(followers)) {
+      alert(
+        'Please provide at least one search criterion (Name, Niche, or Followers)',
+      );
+      return;
+    }
+    // Formulate the query parameters for the API request
+    const queryParams = {};
+    if (name !== null && name !== '') {
+      queryParams['name'] = name;
+    }
+    if (niche !== null && niche !== '') {
+      queryParams['niche'] = niche;
+    }
+    if (!isNaN(followers)) {
+      queryParams['followers'] = followers;
+    }
+
+    // Construct the URL with query parameters
+    const url =
+      'http://127.0.0.1:5000/api/search/influencers' +
+      '?' +
+      new URLSearchParams(queryParams);
+
+    const fetchOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+
+    // Fetch data from the API
+    fetch(url, fetchOptions)
+      .then((response) => {
+        console.log(response); // Log the response object
+        if (!response.ok) {
+          return response.text().then((text) => {
+            throw new Error('HTTP error ' + response.status + ': ' + text);
+          });
+        }
+        return response.json(); // Parse the JSON from the response
+      })
+      .then((data) => {
+        displayInfluencers(data); // Process the JSON data
+        clearSearchForm(); // Clear the search form
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error); // Handle errors
+      });
+  }
+
+  function displayInfluencers(influencers) {
+    const influencerList = document.getElementById('influencerList');
+    influencerList.innerHTML = ''; // Clear previous results
+
+    influencers.forEach((influencer) => {
+      const influencerItem = document.createElement('div');
+      influencerItem.classList.add('card', 'mb-3');
+
+      function abbreviateNumber(number) {
+        if (number < 1000) {
+          return number.toString();
+        } else if (number < 1_000_000) {
+          return (number / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+        } else if (number < 1_000_000_000) {
+          return (number / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+        } else if (number < 1_000_000_000_000) {
+          return (number / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
+        } else {
+          return (
+            (number / 1_000_000_000_000).toFixed(1).replace(/\.0$/, '') + 'T'
+          );
+        }
+      }
+      influencerItem.innerHTML = `
+                                          <div class="card-body">
+                                            <h5 class="card-title mb-1">${
+                                              influencer.username
+                                            }</h5>
+                                            <div class="d-flex align-items-center mb-3 justify-content-between">
+                                              <div class="bg-light rounded-circle text-center p-2 me-3">
+                                                <div class="text-primary fw-bold" style="font-size: 24px;">${abbreviateNumber(
+                                                  influencer.followers,
+                                                )}</div>
+                                              <div class="text-primary" style="font-size: 12px;">Followers</div>
+                                              </div>
+
+                                              <p class="card-text mb-2"><strong>Niche:</strong> ${
+                                                influencer.niche
+                                              }</p>
+                                            <div>
+
+                                            <p class="card-text mb-0">
+                                              <a href="${
+                                                influencer.insta_profile_url
+                                              }" target="_blank"> <img src="{{ url_for('static', filename='img/instagram.svg') }}" style="width: 50px;" ></a>
+
+                                            </p>
+
+
+                                            </div>
+                                            </div>
+
+                    <button class="btn btn-primary" onclick="openAdRequestModal(${
+                      influencer.id
+                    })">Create Ad Request</button>
+
+                    
+                                        </div>`;
+      influencerList.appendChild(influencerItem);
+    });
+  }
+
+  function openAdRequestModal(influencerId) {
+    document.getElementById('influencerId').value = influencerId;
+    $('#adRequestModal').modal('show');
+  }
+
+  document
+    .getElementById('adRequestForm')
+    .addEventListener('submit', function (event) {
+      event.preventDefault();
+      createAdRequest();
+    });
+
+  function createAdRequest() {
+    const campaignId = document.getElementById('campaignId').value;
+    const influencerId = document.getElementById('influencerId').value;
+    const messages = document.getElementById('messages').value;
+    const requirements = document.getElementById('requirements').value;
+    const paymentAmount = document.getElementById('paymentAmount').value;
+
+    const requestData = {
+      campaign_id: campaignId,
+      influencer_id: influencerId,
+      messages: messages,
+      requirements: requirements,
+      payment_amount: parseFloat(paymentAmount),
+    };
+
+    fetch('http://127.0.0.1:5000/api/ad_requests', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((errorData) => {
+            // Check for specific error message
+            alert(errorData.message);
+
+            throw new Error(
+              'Network response was not ok ' + response.statusText,
+            );
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        $('#adRequestModal').modal('hide');
+        alert('Ad Request Created Successfully');
+        // Optionally, you could update the ad requests list here.
+        // For simplicity, we can just reload the page to see the new request in the list.
+        location.reload();
+      })
+      .catch((error) => {
+        console.error('There was a problem with the fetch operation:', error);
+      });
+  }
+
+  function clearSearchForm() {
+    document.getElementById('influencerName').value = '';
+    document.getElementById('influencerNiche').value = '';
+    document.getElementById('influencerFollowers').value = '';
+  }
+
+  function markCampaignAsCompleted(button) {
+    const campaignId = button.getAttribute('data-id');
+    fetch(`http://127.0.0.1:5000/api/campaigns/${campaignId}/complete`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((errorData) => {
+            alert('Error: ' + errorData.message);
+            throw new Error(
+              'Network response was not ok ' + response.statusText,
+            );
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        alert(data.message);
+
+        location.reload();
+      })
+      .catch((error) => {
+        console.error('There was a problem with the fetch operation:', error);
+      });
+  }
+
+  function openEditAdRequestModal(adRequestId, adRequestStatus) {
+    //Fetch existing ad request details
+    if (adRequestStatus === 'Pending' || adRequestStatus === 'Negotiating') {
+      fetch(`http://127.0.0.1:5000/api/ad_requests/${adRequestId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById('editAdRequestId').value = data.id;
+          document.getElementById('editMessages').value = data.messages;
+          document.getElementById('editRequirements').value = data.requirements;
+          document.getElementById('editPaymentAmount').value =
+            data.payment_amount;
+          fetch(`/api/search/influencers/${data.influencer_id}`)
+            .then((res) => res.json())
+            .then((data) => {
+              document.getElementById('editInfluencerSearch').value =
+                data.username; // If needed
+              document.getElementById('editInfluencerId').value = data.id;
+            })
+            .catch((err) => {
+              console.error(err);
+              document.getElementById('editInfluencerSearch').value = '';
+              document.getElementById('editInfluencerId').value = '';
+            });
+
+          $('#editAdRequestModal').modal('show');
+        })
+        .catch((error) =>
+          console.error('Error fetching ad request details:', error),
+        );
+    } else {
+      alert(
+        'Only ad requests with status "Pending" or "Negotiating" can be edited.',
+      );
+    }
+  }
+
+  function deleteAdRequest(adRequestId, adRequestStatus) {
+    if (adRequestStatus === 'Pending' || adRequestStatus === 'Negotiating') {
+      if (confirm('Are you sure you want to delete this ad request?')) {
+        fetch(`http://127.0.0.1:5000/api/ad_requests/${adRequestId}`, {
+          method: 'DELETE',
+        })
+          .then((response) => {
+            if (response.ok) {
+              alert('Ad Request deleted successfully');
+              location.reload();
+            } else {
+              response.json().then((errorData) => {
+                alert('Error: ' + errorData.message);
+              });
+            }
+          })
+          .catch((error) => console.error('Error deleting ad request:', error));
+      }
+    } else {
+      alert(
+        'Only ad requests with status "Pending" or "Negotiating" can be Deleted.',
+      );
+    }
+  }
+  document
+    .getElementById('editAdRequestForm')
+    .addEventListener('submit', function (event) {
+      event.preventDefault();
+      updateAdRequest();
+    });
+
+  function updateAdRequest() {
+    const adRequestId = document.getElementById('editAdRequestId').value;
+    const messages = document.getElementById('editMessages').value;
+    const requirements = document.getElementById('editRequirements').value;
+    const paymentAmount = document.getElementById('editPaymentAmount').value;
+    const influencerId = document.getElementById('editInfluencerId').value;
+
+    const requestData = {
+      messages: messages,
+      requirements: requirements,
+      payment_amount: parseFloat(paymentAmount),
+      influencer_id: influencerId,
+    };
+
+    fetch(`http://127.0.0.1:5000/api/ad_requests/${adRequestId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((errorData) => {
+            alert('An error occurred: ' + errorData.message);
+            throw new Error(
+              'Network response was not ok ' + response.statusText,
+            );
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        $('#editAdRequestModal').modal('hide');
+        alert('Ad Request Updated Successfully');
+        location.reload();
+      })
+      .catch((error) => {
+        console.error('There was a problem with the fetch operation:', error);
+      });
+  }
+
+  // Add a search influencer functionality
+  document
+    .getElementById('editInfluencerSearch')
+    .addEventListener('input', function () {
+      searchInfluencersForEdit();
+    });
+
+  function searchInfluencersForEdit() {
+    const searchValue = document
+      .getElementById('editInfluencerSearch')
+      .value.trim();
+    console.log('searchValue: ', searchValue);
+
+    if (searchValue === '') {
+      document.getElementById('editInfluencerList').innerHTML = '';
+      return;
+    }
+
+    fetch(`http://127.0.0.1:5000/api/search/influencers?name=${searchValue}`)
+      .then((response) => response.json())
+      .then((influencers) => {
+        console.log(influencers);
+        const dropdownMenu = document.getElementById('editInfluencerList');
+        dropdownMenu.innerHTML = '';
+
+        influencers.forEach((influencer) => {
+          const item = document.createElement('a');
+          item.classList.add('dropdown-item');
+          item.href = '#';
+          item.textContent = influencer.username;
+          item.onclick = () => {
+            document.getElementById('editInfluencerSearch').value =
+              influencer.username;
+            document.getElementById('editInfluencerId').value = influencer.id;
+            dropdownMenu.innerHTML = '';
+          };
+          dropdownMenu.appendChild(item);
+        });
+
+        if (influencers.length > 0) {
+          dropdownMenu.classList.add('show');
+        } else {
+          dropdownMenu.classList.remove('show');
+        }
+      })
+      .catch((error) => console.error('Error searching influencers:', error));
+  }
+</script>
+{% endblock %}

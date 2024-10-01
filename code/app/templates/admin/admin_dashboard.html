@@ -1,0 +1,322 @@
+{% extends "partials/base.html" %} {% block title %}Admin Dashboard{% endblock %} {%
+block content %}
+<style>
+    .table-header-1{
+        background-color: rgba(54, 162, 235, 1);
+    }
+    .table-header-2{
+        background-color: rgba(75, 192, 192, 1);
+    }
+</style>
+<div class="container">
+    <div class='d-flex justify-content-between mb-4'>
+        <div class='d-flex flex-column'>
+  <h2>Admin Dashboard</h2>
+  <p>Welcome, Admin!</p>
+        </div>
+  <div class='d-flex flex-column'>
+  <p class='bg-dark text-light p-2 mb-0'>Total Users (Sponsors, Influencers): <span class='text-warning'>{{stats.total_users}}</span></p>
+  <p class='bg-dark text-light p-2 mt-0'>Flagged Users (Sponsors, Influencers): <span class='text-danger'>{{stats.flagged_users}}</span></p>
+  </div>
+</div>
+  
+  <div class="row">
+    <!-- Top 5 Sponsors by Campaigns -->
+    <div class="mb-2 col-md-6">
+      <h3 class='text-center'>Top 5 Sponsors by Campaigns</h3>
+      <div
+        class="chart-container d-flex justify-content-center"
+        style="position: relative; height: 300px; width: 100%"
+      >
+        <canvas id="topSponsorsChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Top 5 Influencers by Ad Requests -->
+    <div class="mb-2 col-md-6">
+      <h3 class='text-center'>Top 5 Influencers by Ad Requests</h3>
+      <div
+        class="chart-container d-flex justify-content-center"
+        style="position: relative; height: 300px; width: 100%"
+      >
+        <canvas id="topInfluencersChart"></canvas>
+      </div>
+    </div>
+    </div>
+    <!--row next-->
+    <div class="row mb-5">
+        <div class="col-md-6">
+          <div class="mb-5 mt-5">
+            <div class="card shadow">
+              <div class="card-header table-header-1 text-white">
+                <h4 class="mb-0 text-center">Top Contributing Sponsors</h4>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped table-hover">
+                    <thead class="thead-dark">
+                      <tr>
+                        <th scope="col">Sponsor Username</th>
+                        <th scope="col">Campaigns Created</th>
+                        <th scope="col">Industry</th>
+                        <th scope="col">Company</th>
+                        <th scope="col">Budget</th>
+                        
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for sponsor_data in stats.top_5_sponsors_by_campaigns %}
+                        <tr>
+                          <td>{{ sponsor_data.sponsor.user.username }}</td>
+                          <td>{{ sponsor_data.campaign_count }}</td>
+                          <td>{{ sponsor_data.sponsor.industry }}</td>
+                          <td>{{ sponsor_data.sponsor.company_name }}</td>
+                          <td>${{ sponsor_data.sponsor.budget }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="mb-5 mt-5">
+            <div class="card shadow">
+              <div class="card-header table-header-2 text-white">
+                <h4 class="mb-0 text-center">Top Contributing Influencers</h4>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped table-hover">
+                    <thead class="thead-dark">
+                      <tr>
+                        <th scope="col">Influencer Username</th>
+                        <th scope="col">Ad Requests Served</th>
+                        <th scope="col">Followers</th>
+                        <th scope="col">Niche</th>
+                        <th scope="col">Instagram</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for influencer_data in stats.top_5_influencers_by_ad_requests %}
+                        <tr>
+                          <td>{{ influencer_data.influencer.user.username }}</td>
+                          <td>{{ influencer_data.ad_request_count }}</td>
+                          <td>{{ influencer_data.influencer.followers }}</td>
+                          <td>{{ influencer_data.influencer.niche }}</td>
+                          <td>
+                            <a href="{{ influencer_data.influencer.insta_profile_url }}" target="_blank">
+                              <img id="insta" src="{{ url_for('static', filename='img/instagram.svg') }}" class="img-fluid" style="width: 30px;">
+                            </a>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <!--2nd row-->
+
+      <!-- Campaign Status Breakdown -->
+       <div class='row mb-5'>
+      <div class="col-md-6 mb-4">
+        <h3 class='text-center'>Campaign Status Breakdown</h3>
+        <div
+        class="chart-container d-flex justify-content-center"
+        style="position: relative; height: 300px; width: 100%"
+      >
+        <canvas id="campaignStatusChart"></canvas>
+      </div>
+      </div>
+      
+      <div class="col-md-6 mb-4">
+        <h3 class='text-center mb-4'>Global Campaign Statistics</h3>
+        <div class='d-flex flex-column align-items-center justify-content-center'>
+        
+        <p class='card-text h5'><span class='font-weight-bold'>Public Campaigns: </span>{{stats.total_public_campaigns}}</p>
+        <p class='card-text h5'><span class='font-weight-bold'>Private Campaigns: </span>{{stats.total_private_campaigns}}</p>
+        <p class='card-text h5'><span class='font-weight-bold'>Total Campaigns Budget: </span>${{stats.total_campaign_budget}}</p>
+        <p class='card-text h5'><span class='font-weight-bold'>Average Campaign Budget: </span>${{stats.average_campaign_budget}}</p>
+        <p class='card-text h5'><span class='font-weight-bold'>Average Campaign Duration: </span>{{stats.average_campaign_duration | round(2)}} days</p>
+        </div>  
+    </div>
+   
+
+    </div>
+<!--3rd row-->
+<div class='row mb-5'>  
+    
+     <!-- Total Payments Processed vs In-Process -->
+     <div class="col-md-6 mb-4">
+        <h3 class="text-center">Total Payments Processed vs In-Process</h3>
+        <div class="chart-container d-flex justify-content-center"
+        style="position: relative; height: 300px; width: 100%">
+          <canvas id="paymentsChart"></canvas>
+        </div>
+      </div>
+ <!-- Ad Requests Status Breakdown -->
+ <div class="col-md-6 mb-4">
+    <h3 class="text-center">Ad Requests Status Breakdown</h3>
+    <div class="chart-container d-flex justify-content-center"
+    style="position: relative; height: 300px; width: 100%">
+      <canvas id="adRequestsStatusChart"></canvas>
+    </div>
+    </div>
+      
+
+     
+</div>
+
+    <!-- Add more admin-specific content here -->
+    <script>
+        // Data for Top 5 Sponsors by Campaigns
+        var topSponsorsData = [
+            {% for data in stats.top_5_sponsors_by_campaigns %}
+                {{ data.campaign_count }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        var topSponsorsLabels = [
+            {% for data in stats.top_5_sponsors_by_campaigns %}
+                "{{ data.sponsor.user.username }}"{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        document.addEventListener("DOMContentLoaded", function() {
+        var topSponsorsCtx = document.getElementById('topSponsorsChart').getContext('2d');
+        new Chart(topSponsorsCtx, {
+            type: 'bar',
+            data: {
+                labels: topSponsorsLabels,
+                datasets: [{
+                    label: 'Number of Campaigns',
+                    data: topSponsorsData,
+                    backgroundColor: 'rgba(54, 162, 235, 1)',
+                    borderColor: 'rgba(54, 162, 235, 0.5)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Data for Top 5 Influencers by Ad Requests
+
+        var topInfluencersData = [
+            {% for data in stats.top_5_influencers_by_ad_requests %}
+                {{ data.ad_request_count }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+        var topInfluencersLabels = [
+            {% for data in stats.top_5_influencers_by_ad_requests %}
+                "{{ data.influencer.user.username }}"{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        var topInfluencersCtx = document.getElementById('topInfluencersChart').getContext('2d');
+        new Chart(topInfluencersCtx, {
+            type: 'bar',
+            data: {
+                labels: topInfluencersLabels,
+                datasets: [{
+                    label: 'Number of Ad Requests (Completed or Ongoing)',
+                    data: topInfluencersData,
+                    backgroundColor: 'rgba(75, 192, 192, 1)',
+                    borderColor: 'rgba(75, 192, 192, 0.5)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+
+        // Data for Campaign Status Breakdown
+        var campaignStatusCtx = document.getElementById('campaignStatusChart').getContext('2d');
+        new Chart(campaignStatusCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Ongoing', 'Completed'],
+                datasets: [{
+                    label: 'Campaign Status',
+                    data: [
+                        {{ stats.active_campaigns_count }},
+                        {{ stats.completed_campaigns_count }}
+                    ],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+
+                }]
+            }
+        });
+
+        // Data for Ad Requests Status Breakdown
+        var adRequestsStatusCtx = document.getElementById('adRequestsStatusChart').getContext('2d');
+        new Chart(adRequestsStatusCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Pending', 'Accepted', 'Rejected', 'Negotiating', 'Completed'],
+                datasets: [{
+                    label: 'Ad Requests Status',
+                    data: [
+                        {{ stats.pending_ad_requests_count }},
+                        {{ stats.accepted_ad_requests_count }},
+                        {{ stats.rejected_ad_requests_count }},
+                        {{ stats.negotiating_ad_requests_count }},
+                        {{ stats.completed_ad_requests_count }}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255,1)'
+                    ],
+                    
+                }]
+            }
+        });
+
+        // Data for Payments Processed vs In-Process
+        var paymentsCtx = document.getElementById('paymentsChart').getContext('2d');
+        new Chart(paymentsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Processed', 'In-Process'],
+                datasets: [{
+                    label: 'Payments',
+                    data: [
+                        {{ stats.total_payments_processed }},
+                        {{ stats.total_payments_inprocess }}
+                    ],
+                    backgroundColor: [
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    
+                }]
+            }
+        });
+      });
+    </script>
+    {% endblock %}
+  </div>
+</div>

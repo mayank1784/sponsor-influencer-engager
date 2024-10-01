@@ -1,0 +1,56 @@
+{% extends "partials/base.html" %}
+{% block title %}Edit Sponsor Profile{% endblock %}
+{% block content %}
+<style>
+    .edit-profile-container {
+        max-width: 800px;
+        margin: auto;
+        padding: 2rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .form-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        font-weight: bold;
+    }
+    .btn-update {
+        width: 100%;
+        background-color: #007bff;
+        border: none;
+        color: #fff;
+        padding: 0.5rem;
+        font-size: 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+    }
+    .btn-update:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<div class="container mt-5">
+<div class="edit-profile-container">
+    <h1 class="form-header">Edit Sponsor Profile</h1>
+    <form method="post">
+        <div class="form-group">
+            <label for="company_name">Company Name</label>
+            <input type="text" class="form-control" id="company_name" name="company_name" value="{{ sponsor.company_name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="industry">Industry</label>
+            <input type="text" class="form-control" id="industry" name="industry" value="{{ sponsor.industry }}" required>
+        </div>
+        <div class="form-group">
+            <label for="budget">Budget</label>
+            <input type="number" class="form-control" id="budget" name="budget" value="{{ sponsor.budget }}" required>
+        </div>
+        <button type="submit" class="btn btn-update">Update Profile</button>
+    </form>
+</div>
+</div>
+{% endblock %}

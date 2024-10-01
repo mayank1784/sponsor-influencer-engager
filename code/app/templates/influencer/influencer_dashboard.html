@@ -1,0 +1,275 @@
+{% extends "partials/base.html" %} {% block title %}Influencer Dashboard{% endblock %} {%
+block content %}
+<style>
+  .card-custom {
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+</style>
+<div class="container">
+  <h4 class="mb-4">
+    {% if admin %}
+    <strong>{{ influencer.user.username }}'s Profile</strong>
+    {% else %}
+    <strong>Welcome, {{ influencer.user.username }} !</strong>
+    {% endif %}
+    
+  </h4>
+  {% if admin %}
+ <div class="card mb-5">
+   <div class="card-body">
+     <p><strong>Username:</strong> {{ influencer.user.username }}</p>
+     <p><strong>Insta Profile:</strong> <a href='{{influencer.insta_profile_url}}' target='_blank'>{{ influencer.insta_profile_url }}</a></p>
+     <p><strong>Category:</strong> {{ influencer.category }}</p>
+     <p><strong>Followers:</strong> {{ influencer.followers }}</p>
+     <p><strong>Niche:</strong> {{ influencer.niche }}</p>
+     <p><strong>Reach:</strong> {{ influencer.reach }}</p>
+     {% if influencer.user.flagged %}
+     <p class='btn btn-danger'>Flagged</p>
+     {% else %}
+     <p class='btn btn-success'>Active</p>
+     {% endif %}
+   </div>
+ </div>
+ {% endif %}
+  <div class="row mb-5">
+    <!-- Influencer Info -->
+    <div class="col-md-4">
+      <h4>Stats Overview</h4>
+      <p class="">
+        Total Ad Requests:
+        <span
+          class="counter"
+          data-target="{{ influencer_stats.total_ad_requests }}"
+        ></span>
+      </p>
+      <p class="">
+        Completed Ad Requests:
+        <span
+          class="counter"
+          data-target="{{ influencer_stats.completed_ad_requests }}"
+        ></span>
+      </p>
+      <p class="">
+        Pending Ad Requests:
+        <span
+          class="counter"
+          data-target="{{ influencer_stats.pending_ad_requests }}"
+        ></span>
+      </p>
+      <p class="">
+        Accepted Ad Requests:
+        <span
+          class="counter"
+          data-target="{{ influencer_stats.accepted_ad_requests }}"
+        ></span>
+      </p>
+      <p class="">
+        Negotiating Ad Requests:
+        <span
+          class="counter"
+          data-target="{{ influencer_stats.negotiating_ad_requests }}"
+        ></span>
+      </p>
+      <p class="">
+        Rejected Ad Requests:
+        <span
+          class="counter"
+          data-target="{{ influencer_stats.rejected_ad_requests }}"
+        ></span>
+      </p>
+    </div>
+
+    <div class="col-md-4">
+      <h4 class="text-center">Ad Status Overview</h4>
+      <div
+        class="chart-container d-flex justify-content-center"
+        style="position: relative; height: 250px; width: 100%"
+      >
+        <canvas id="adStatusChart"></canvas>
+      </div>
+    </div>
+    <div
+      class="col-md-4 d-flex justify-content-top flex flex-column text-center align-items-center"
+    >
+      <h4>Payments Recieved</h4>
+      <div class="d-flex">
+        <div class="h3 text-success">$</div>
+        <div
+          class="counter h3 text-success"
+          data-target="{{influencer_stats.payments_recieved}}"
+        ></div>
+      </div>
+      <h4>Upcoming Payments</h4>
+      <div class="d-flex">
+        <div class="h3 text-warning">$</div>
+        <div
+          class="counter h3 text-warning"
+          data-target="{{influencer_stats.upcoming_payments}}"
+        ></div>
+      </div>
+      <h4>Average Earning Per Ad</h4>
+      <div class="d-flex">
+        <div class="h3 text-info">$</div>
+        <div
+          class="counter h3 text-info"
+          data-target="{{influencer_stats.average_earning}}"
+        ></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add more influencer-specific content here -->
+  <!--2nd row-->
+  <div class="row mt-4 mb-5">
+    <div class='col-6 d-flex justify-content-center align-items-center'>
+      <h2 class='text-center'>Your participation in campaigns over weeks. <span><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
+      </svg></i></span></h2>
+    </div>
+    <div
+      class="chart-container d-flex justify-content-center col-6"
+      style="position: relative; height: 250px; width: 100%"
+    >
+      <canvas id="campaignParticipationChart"></canvas>
+    </div>
+  </div>
+  <!--3rd row-->
+  <div class="row mb-5">
+    {% set loss = namespace(value=0|float)%} {% for ad_request in
+    deadline_approaching_ads %} {% set loss.value = loss.value +
+    ad_request.payment_amount %}{% endfor %}
+    <h2 class="col-12">Deadlines approaching (Coming Week)</h2>
+    <h3 class="col-12 mt-2 mb-3">
+      Potential Loss: <span class="text-danger">$ </span
+      ><span class="text-danger counter" data-target="{{loss.value}}"></span>
+    </h3>
+    <div class="card col-12">
+      {% for ad_request in deadline_approaching_ads %}
+      <div class="card card-custom mb-1 shadow-sm mt-2">
+        {% with ad_request=ad_request %} {% include "partials/ad_request_card.html" %} {%
+        endwith %}
+      </div>
+      {% else %}
+      <p>No deadlines approaching</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<script>
+        // Ad Status Chart
+        document.addEventListener("DOMContentLoaded", function() {
+        const adStatusCtx = document.getElementById('adStatusChart').getContext('2d');
+        new Chart(adStatusCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Pending', 'Accepted', 'Negotiating', 'Rejected', 'Completed', 'Abandoned'],
+                datasets: [{
+                    label: 'Ad Status',
+                    data: [
+                        {{ ad_status_data['Pending'] }},
+                        {{ ad_status_data['Accepted'] }},
+                        {{ ad_status_data['Negotiating'] }},
+                        {{ ad_status_data['Rejected'] }},
+                        {{ ad_status_data['Completed'] }},
+                        {{ ad_status_data['Abandoned'] }}
+                    ],
+                    backgroundColor: [
+                        '#FF6384',
+                        '#36A2EB',
+                        '#FFCE56',
+                        '#4BC0C0',
+                        '#cc65fe',
+                        '#000'
+                    ]
+                }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top'
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      return context.label + ': ' + context.raw;
+                    }
+                  }
+                }
+              }
+            }
+        });
+
+        // Campaign Status Chart
+        const campaignParticipationData = {{ campaign_participation_data | tojson }};
+            const labels = campaignParticipationData.map(data => data.date_range);
+            const statuses = ['Pending', 'Accepted', 'Negotiating', 'Rejected', 'Completed', 'Abandoned'];
+            const datasets = statuses.map(status => {
+                return {
+                    label: status,
+                    data: campaignParticipationData.map(data => data[status] || 0),
+                    backgroundColor: getStatusColor(status)
+                };
+            });
+            console.log(datasets)
+            function getStatusColor(status) {
+              switch(status) {
+                  case 'Pending': return 'rgba(255, 99, 132, 1)';
+                  case 'Accepted': return 'rgba(54, 162, 235, 1)';
+                  case 'Negotiating': return 'rgba(255, 206, 86, 1)';
+                  case 'Rejected': return 'rgba(75, 192, 192, 1)';
+                  case 'Completed': return 'rgba(153, 102, 255, 1)';
+                  case 'Abandoned': return 'rgba(255, 159, 64, 1)';
+                  default: return 'rgba(201, 203, 207, 1)';
+              }
+          }
+
+          const ctx2 = document.getElementById('campaignParticipationChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true
+                        }
+                    }
+                }
+            });
+
+    });
+    const counters = document.querySelectorAll(".counter");
+
+    counters.forEach((counter) => {
+      counter.innerText = "0";
+      const updateCounter = () => {
+        const target = +counter.getAttribute("data-target");
+        const count = +counter.innerText;
+        const increment = target / 200;
+    
+        if (count < target) {
+          // Check if the target is an integer and format the count accordingly
+          if (Number.isInteger(target)) {
+            counter.innerText = `${Math.ceil(count + increment)}`;
+          } else {
+            counter.innerText = `${(count + increment).toFixed(2)}`;
+          }
+          setTimeout(updateCounter, 5);
+        } else {
+          // Check if the target is an integer and format the final count accordingly
+          counter.innerText = Number.isInteger(target) ? target : target.toFixed(2);
+        }
+      };
+      updateCounter();
+    });
+</script>
+{% endblock %}
